@@ -1,0 +1,686 @@
+/* ============================================================
+   STRANGER FLAP — STYLE SHEETS
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Inter:wght@400;700&display=swap');
+
+:root {
+  --bg-dark: #05020c;
+  --bg-cabinet: #0d061f;
+  --accent-red: #ff1e27;
+  --accent-red-glow: rgba(255, 30, 39, 0.6);
+  --accent-cyan: #00f0ff;
+  --accent-cyan-glow: rgba(0, 240, 255, 0.5);
+  --accent-purple: #8b5cf6;
+  --text-white: #f0f0ff;
+  --text-muted: #8c8ba0;
+  
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-terminal: 'VT323', monospace;
+  --font-sans: 'Inter', sans-serif;
+  
+  --border-cabinet: 6px solid #2a203a;
+  --border-red: 2px solid var(--accent-red);
+}
+
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-white);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Background Particle Canvas */
+#ambient-container {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+#ambient-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Main Layout Wrapper */
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 680px;
+  z-index: 10;
+}
+
+/* Stranger Things Replica Logo */
+.game-header {
+  text-align: center;
+}
+
+.stranger-logo {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-family: var(--font-pixel);
+  color: var(--accent-red);
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 6px var(--accent-red-glow)) drop-shadow(0 0 15px rgba(255, 30, 39, 0.3));
+  line-height: 1;
+}
+
+.logo-large {
+  font-size: clamp(2rem, 8vw, 4rem);
+  font-weight: 900;
+}
+
+.logo-mid-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0 -0.05em;
+}
+
+.logo-line-top {
+  position: absolute;
+  top: -12%;
+  left: 0;
+  width: 100%;
+  height: clamp(3px, 0.8vw, 6px);
+  background-color: var(--accent-red);
+  box-shadow: 0 0 4px var(--accent-red-glow);
+}
+
+.logo-mid {
+  font-size: clamp(1.4rem, 6vw, 3rem);
+  font-weight: 900;
+}
+
+.subtitle {
+  font-family: var(--font-pixel);
+  font-size: clamp(0.5rem, 1.8vw, 0.7rem);
+  color: var(--accent-cyan);
+  margin-top: 0.5rem;
+  letter-spacing: 0.2em;
+}
+
+.text-glow {
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+
+/* ============================================================
+   ARCADE CABINET CONTAINER
+   ============================================================ */
+.arcade-cabinet {
+  background: var(--bg-cabinet);
+  border: var(--border-cabinet);
+  border-radius: 12px;
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 30px rgba(0, 0, 0, 0.6),
+    0 0 0 4px #1a1525,
+    0 0 25px rgba(139, 92, 246, 0.25);
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color 0.8s ease, box-shadow 0.8s ease;
+}
+
+/* Cabinet Header Marquee */
+.cabinet-marquee {
+  background: #020105;
+  border-bottom: 3px solid #1c1130;
+  padding: 0.6rem;
+  text-align: center;
+  box-shadow: inset 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.marquee-text {
+  font-size: 0.65rem;
+  color: var(--accent-cyan);
+  letter-spacing: 0.15em;
+  animation: textFlicker 4s infinite linear;
+}
+
+/* Game Viewport Container */
+.viewport-container {
+  width: 100%;
+  aspect-ratio: 3/2;
+  position: relative;
+  background-color: #000;
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.95);
+}
+
+/* Scanlines and screen effects */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+}
+
+.screen-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 16;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ============================================================
+   SCREEN OVERLAYS (Character Select & Game Over)
+   ============================================================ */
+.screen-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(5, 2, 12, 0.95);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  text-align: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.screen-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Title in select screen */
+.select-title {
+  font-size: clamp(0.75rem, 2.5vw, 1.1rem);
+  color: var(--accent-red);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+/* Character Selection Grid */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 0.5rem;
+}
+
+.char-card {
+  background: rgba(13, 8, 30, 0.8);
+  border: 2px solid #2a203a;
+  border-radius: 6px;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.char-card:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan-glow);
+  transform: translateY(-2px);
+}
+
+.char-card.active {
+  border-color: var(--accent-red);
+  background: rgba(255, 30, 39, 0.08);
+  box-shadow: 0 0 12px var(--accent-red-glow);
+}
+
+.char-preview-box {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid #3c2f54;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.char-preview-canvas {
+  image-rendering: pixelated;
+  width: 32px;
+  height: 32px;
+}
+
+.char-card.active .char-preview-box {
+  border-color: var(--accent-red);
+}
+
+.char-name {
+  font-size: clamp(0.4rem, 1.2vw, 0.55rem);
+  color: var(--text-white);
+  letter-spacing: 0.05em;
+}
+
+.char-card.active .char-name {
+  color: var(--accent-red);
+  font-weight: bold;
+}
+
+/* Character Detail Panel */
+.char-detail-panel {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #2a203a;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.char-detail-panel h3 {
+  font-size: 0.95rem;
+  color: var(--accent-cyan);
+  letter-spacing: 0.05em;
+}
+
+#detail-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  margin-top: 0.2rem;
+}
+
+.stat-item {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-weight: bold;
+}
+
+.text-red { color: var(--accent-red); }
+.text-blue { color: var(--accent-cyan); }
+
+.special-power-row {
+  font-size: 0.7rem;
+  border-top: 1px solid #1a1525;
+  padding-top: 0.2rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.special-label {
+  color: var(--accent-purple);
+}
+
+.special-value {
+  color: #ffff00;
+  font-weight: bold;
+}
+
+/* ============================================================
+   BUTTONS (Arcade retro style)
+   ============================================================ */
+.btn-arcade {
+  background: var(--accent-red);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 0.75rem 2rem;
+  font-size: clamp(0.6rem, 1.8vw, 0.75rem);
+  cursor: pointer;
+  box-shadow: 
+    0 4px 0 #990008,
+    0 6px 15px rgba(255, 30, 39, 0.4);
+  transition: all 0.1s ease;
+  outline: none;
+  margin-top: 0.25rem;
+}
+
+.btn-arcade:hover {
+  background: #ff333a;
+  transform: translateY(1px);
+  box-shadow: 
+    0 3px 0 #990008,
+    0 4px 10px rgba(255, 30, 39, 0.4);
+}
+
+.btn-arcade:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+.btn-arcade.btn-secondary {
+  background: var(--accent-cyan);
+  color: #000;
+  box-shadow: 
+    0 4px 0 #009cb5,
+    0 6px 15px rgba(0, 240, 255, 0.3);
+}
+
+.btn-arcade.btn-secondary:hover {
+  background: #33f3ff;
+  box-shadow: 
+    0 3px 0 #009cb5,
+    0 4px 10px rgba(0, 240, 255, 0.3);
+}
+
+.btn-arcade.btn-secondary:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+/* ============================================================
+   GAME OVER SCREEN OVERLAY
+   ============================================================ */
+.game-over-title {
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  color: var(--accent-red);
+  letter-spacing: 0.1em;
+  animation: glitch 1.5s infinite steps(2);
+  margin-bottom: 0.5rem;
+}
+
+.final-stats-box {
+  width: 100%;
+  max-width: 320px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px dashed var(--accent-red);
+  padding: 1rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+}
+
+.stat-val {
+  color: #ffff00;
+  font-weight: bold;
+}
+
+.btn-group {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  width: 100%;
+  max-width: 320px;
+}
+
+@media (min-width: 480px) {
+  .btn-group {
+    flex-direction: row;
+  }
+  .btn-group .btn-arcade {
+    flex: 1;
+  }
+}
+
+/* ============================================================
+   CABINET BOTTOM CONTROLS / HUD
+   ============================================================ */
+.cabinet-controls {
+  background: #020105;
+  border-top: 3px solid #1c1130;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hud-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.hud-indicator {
+  color: var(--text-muted);
+}
+
+.hud-num {
+  color: #ffff00;
+  font-weight: bold;
+}
+
+.hud-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dimension-status {
+  font-size: clamp(0.45rem, 1.6vw, 0.65rem);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.dimension-status.rsu {
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  background-color: rgba(0, 240, 255, 0.05);
+}
+
+.dimension-status.usd {
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  background-color: rgba(255, 30, 39, 0.05);
+  box-shadow: 0 0 12px var(--accent-red-glow);
+  animation: blink 1s infinite alternate;
+}
+
+.hud-right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.control-btn {
+  background: #1a1525;
+  border: 1px solid #3c2f54;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-pixel);
+  font-size: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.control-btn:hover {
+  color: #fff;
+  border-color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.1);
+}
+
+/* ============================================================
+   MODALS AND DIALOGS
+   ============================================================ */
+.modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(2, 1, 5, 0.85);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  transition: opacity 0.2s ease;
+}
+
+.modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glass-panel {
+  background: rgba(13, 8, 30, 0.95);
+  border: 2px solid var(--accent-red);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px var(--accent-red-glow);
+  padding: 2rem 1.5rem;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  text-align: left;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.modal-close:hover {
+  color: var(--accent-red);
+}
+
+.info-list {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--text-white);
+}
+
+.highlight { color: var(--accent-cyan); }
+.highlight-yellow { color: #ffff00; }
+.highlight-red { color: var(--accent-red); }
+
+/* Footer */
+.game-footer {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================
+   ANIMATIONS & CRUSTY EFFECT overrides
+   ============================================================ */
+
+@keyframes textFlicker {
+  0%, 100% { opacity: 0.95; }
+  23% { opacity: 0.95; }
+  24% { opacity: 0.6; }
+  26% { opacity: 0.95; }
+  64% { opacity: 0.95; }
+  65% { opacity: 0.45; }
+  68% { opacity: 0.95; }
+  85% { opacity: 0.95; }
+  86% { opacity: 0.3; }
+  88% { opacity: 0.95; }
+}
+
+@keyframes blink {
+  0% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+/* Upside down screen effects: shake and organic dark red tints */
+body.upside-down-active .arcade-cabinet {
+  animation: screenShake 0.4s ease-out;
+  border-color: #7a0b0f;
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.95),
+    inset 0 0 30px rgba(0, 0, 0, 0.9),
+    0 0 35px rgba(229, 9, 20, 0.35);
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-4px, 2px); }
+  30% { transform: translate(4px, -2px); }
+  50% { transform: translate(-3px, -3px); }
+  70% { transform: translate(3px, 2px); }
+  90% { transform: translate(-1px, -1px); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 540px) {
+  .char-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .char-detail-panel {
+    display: none; /* Hide detailed specs on very small screens to fit selection cards */
+  }
+}

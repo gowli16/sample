@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stranger Snake — Hawkins Arcade</title>
+  <meta name="description" content="A Stranger Things inspired retro Snake arcade game. Collect waffles, rescue the party, and close the portals before you get lost in the Upside Down!">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fullscreen Ambient Particle Canvas -->
+  <div id="ambient-container">
+    <canvas id="ambient-canvas"></canvas>
+  </div>
+
+  <div class="main-wrapper">
+    <!-- Header Logo -->
+    <header class="game-header">
+      <div class="stranger-logo">
+        <span class="logo-large">S</span>
+        <span class="logo-mid-wrapper">
+          <span class="logo-line-top"></span>
+          <span class="logo-mid">TRANGER</span>
+        </span>
+        <span class="logo-large">S</span>
+        <span class="logo-mid-wrapper">
+          <span class="logo-line-top"></span>
+          <span class="logo-mid">NAKE</span>
+        </span>
+      </div>
+      <p class="subtitle text-glow">HAWKINS ARCADE &bull; EST. 1983</p>
+    </header>
+
+    <!-- Arcade Cabinet Frame -->
+    <main class="arcade-cabinet">
+      <!-- Top Neon Header -->
+      <div class="cabinet-marquee">
+        <span class="marquee-text font-pixel">REALITY WARP MODE ACTIVE</span>
+      </div>
+
+      <!-- Main Game Viewport Screen Container -->
+      <div class="viewport-container" id="arcade-screen">
+        
+        <!-- Screen Scanlines & Glare -->
+        <div class="screen-glass"></div>
+        <div class="scanlines"></div>
+
+        <!-- 1. START OVERLAY -->
+        <div id="start-screen" class="screen-overlay font-pixel">
+          <h2 class="select-title text-glow">RESCUE THE PARTY</h2>
+          
+          <div class="hero-showcase">
+            <canvas id="showcase-canvas" width="300" height="80"></canvas>
+            <p class="showcase-caption font-terminal">EAT WAFFLES TO ADD KIDS TO THE BIKE CHAIN caravan</p>
+          </div>
+
+          <div class="rules-snippet font-terminal">
+            <p class="warning-text">&bull; BEWARE THE RIFT PORTALS &bull;</p>
+            <p>A portal spawn immediately drags you into the <span class="highlight-red">UPSIDE DOWN</span>, rotating your screen 180 degrees! Eat the portal to escape!</p>
+          </div>
+
+          <!-- Start Button -->
+          <button id="btn-start-game" class="btn-arcade font-pixel">▶ INSERT COIN & PLAY</button>
+        </div>
+
+        <!-- 2. GAME PLAY CANVAS -->
+        <canvas id="game-canvas" width="400" height="400"></canvas>
+
+        <!-- 3. GAME OVER OVERLAY -->
+        <div id="game-over-screen" class="screen-overlay font-pixel hidden">
+          <h2 class="game-over-title text-glow glitch-text">LOST IN THE VOID</h2>
+          
+          <div class="final-stats-box font-terminal">
+            <div class="stat-line">
+              <span>PARTY RESCUED:</span>
+              <span id="final-score" class="stat-val">00</span>
+            </div>
+            <div class="stat-line">
+              <span>EGGO WAFFLES:</span>
+              <span id="final-waffles" class="stat-val">00</span>
+            </div>
+            <div class="stat-line">
+              <span>BEST SCORE:</span>
+              <span id="best-score" class="stat-val">00</span>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-retry" class="btn-arcade">▶ CONTINUE?</button>
+            <button id="btn-menu" class="btn-arcade btn-secondary">◀ MAIN MENU</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cabinet Controllers HUD Dashboard -->
+      <div class="cabinet-controls font-pixel">
+        <div class="hud-left">
+          <div class="hud-indicator font-terminal">
+            PARTY SIZE: <span id="hud-score" class="hud-num">1</span>
+          </div>
+          <div class="hud-indicator font-terminal">
+            EGGOs: <span id="hud-waffles" class="hud-num">0</span>
+          </div>
+        </div>
+        <div class="hud-center">
+          <div id="dimension-indicator" class="dimension-status rsu text-cyan font-pixel">RIGHT SIDE UP</div>
+        </div>
+        <div class="hud-right">
+          <button id="btn-mute" class="control-btn" title="Toggle Sound">🔊 SOUND</button>
+          <button id="btn-info" class="control-btn" title="How To Play">❓ HELP</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Instructional Overlay Modal -->
+    <div id="info-modal" class="modal hidden font-pixel">
+      <div class="modal-content glass-panel">
+        <button id="btn-close-modal" class="modal-close">[ESC] CLOSE</button>
+        <h3 class="text-glow text-red">OPERATION RESCUE</h3>
+        <ul class="info-list font-terminal">
+          <li>&bull; Use <span class="highlight">ARROW KEYS</span> or <span class="highlight">WASD</span> to steer your leader.</li>
+          <li>&bull; Eat <span class="highlight-yellow">EGGO WAFFLES</span> to rescue the next kid. They follow you as a bike tail!</li>
+          <li>&bull; Do not crash into the walls or your own tail caravan.</li>
+          <li>&bull; <span class="highlight-red">WARNING</span>: When a Rift Portal spawns, the game shifts to the **Upside Down** and the **entire screen rotates 180 degrees**!</li>
+          <li>&bull; Eat the portal immediately to escape the Upside Down and restore normal rotation.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Quick Footer -->
+    <footer class="game-footer font-terminal">
+      <p>&copy; 1983 HAWKINS TOY & GAME CO. &bull; ALL RIGHTS RESERVED</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

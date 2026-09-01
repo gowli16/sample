@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLITCH — Game Dev SIG | ACM Amrita</title>
+  <meta name="description" content="Welcome to GLITCH, the game development division of ACM Amrita. A Stranger Things inspired immersive portal into the world of game creation, pixel art, and interactive experiences.">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            spaceDark: '#05020c',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            space: ['Space Grotesk', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- GSAP & Plugins -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+</head>
+<body class="min-h-screen relative">
+
+  <!-- Custom Blend-Mode Cursor -->
+  <div id="custom-cursor"></div>
+  <div id="custom-cursor-ring"></div>
+
+  <!-- Fullscreen Background Canvas (Starfield / Spores) -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- ============================================================
+       HERO / LOBBY SECTION (SNES GAME START THEMED)
+       ============================================================ -->
+  <section id="home">
+    <!-- Stranger Things Replica Logo for GLITCH -->
+    <div class="stranger-logo mt-4">
+      <span class="logo-large">G</span>
+      <span class="logo-mid-wrapper">
+        <span class="logo-line-top"></span>
+        <span class="logo-mid">LITC</span>
+      </span>
+      <span class="logo-large">H</span>
+    </div>
+
+    <div class="font-pixel text-center text-red-600 text-[9px] sm:text-xs tracking-[0.2em] mb-4">
+      &bull; 1983 &bull;
+    </div>
+
+    <!-- Sliding Landscape Frame -->
+    <div class="hero-scene-container">
+      <div class="hero-scene-inner" id="hero-scene-inner">
+        
+        <!-- Right Side Up Scene (Top 50%) -->
+        <div class="scene-rsu">
+          <div class="scene-moon"></div>
+          <!-- Canvas for subtle star twinkling -->
+          
+          <!-- Kids Silhouette SVG -->
+          <svg class="scene-kids" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Kid 1 (Lucas) -->
+            <g transform="translate(40, 20)">
+              <rect x="18" y="10" width="12" height="12" rx="3" fill="#010005" /> <!-- Head -->
+              <rect x="14" y="22" width="20" height="28" rx="2" fill="#010005" /> <!-- Torso + Backpack -->
+              <rect x="23" y="24" width="14" height="20" rx="1" fill="#010005" /> <!-- Backpack extrude -->
+              <rect x="10" y="50" width="8" height="30" fill="#010005" transform="rotate(-15 10 50)" /> <!-- Arms -->
+              <rect x="30" y="50" width="8" height="30" fill="#010005" transform="rotate(15 30 50)" />
+              <!-- Bike parts -->
+              <circle cx="12" cy="85" r="14" stroke="#010005" stroke-width="5" fill="none" /> <!-- Back wheel -->
+              <circle cx="36" cy="85" r="14" stroke="#010005" stroke-width="5" fill="none" /> <!-- Front wheel -->
+              <line x1="12" y1="85" x2="24" y2="60" stroke="#010005" stroke-width="6" /> <!-- Frame -->
+              <line x1="36" y1="85" x2="24" y2="60" stroke="#010005" stroke-width="6" />
+              <line x1="24" y1="60" x2="24" y2="40" stroke="#010005" stroke-width="7" /> <!-- Seat post -->
+              <line x1="20" y1="40" x2="32" y2="40" stroke="#010005" stroke-width="5" /> <!-- Handlebar -->
+            </g>
+            
+            <!-- Kid 2 (Dustin) -->
+            <g transform="translate(100, 22)">
+              <circle cx="23" cy="16" r="8" fill="#010005" /> <!-- Head with curly hair shape -->
+              <rect x="13" y="12" width="18" height="6" rx="2" fill="#010005" /> <!-- Cap visor -->
+              <rect x="11" y="22" width="24" height="30" rx="4" fill="#010005" /> <!-- Puffy jacket -->
+              <rect x="15" y="24" width="16" height="24" rx="2" fill="#010005" /> <!-- Backpack -->
+              <!-- Bike -->
+              <circle cx="10" cy="88" r="13" stroke="#010005" stroke-width="5" fill="none" />
+              <circle cx="36" cy="88" r="13" stroke="#010005" stroke-width="5" fill="none" />
+              <line x1="10" y1="88" x2="23" y2="62" stroke="#010005" stroke-width="6" />
+              <line x1="36" y1="88" x2="23" y2="62" stroke="#010005" stroke-width="6" />
+              <line x1="23" y1="62" x2="23" y2="44" stroke="#010005" stroke-width="7" />
+              <line x1="17" y1="44" x2="29" y2="44" stroke="#010005" stroke-width="5" />
+            </g>
+
+            <!-- Kid 3 (Mike) -->
+            <g transform="translate(160, 20)">
+              <rect x="16" y="10" width="14" height="14" rx="5" fill="#010005" /> <!-- Puffy hair head -->
+              <rect x="13" y="24" width="20" height="28" rx="2" fill="#010005" /> <!-- Slim coat -->
+              <rect x="18" y="26" width="10" height="20" rx="1" fill="#010005" /> <!-- Backpack -->
+              <!-- Bike -->
+              <circle cx="10" cy="85" r="14" stroke="#010005" stroke-width="5" fill="none" />
+              <circle cx="36" cy="85" r="14" stroke="#010005" stroke-width="5" fill="none" />
+              <line x1="10" y1="85" x2="23" y2="60" stroke="#010005" stroke-width="6" />
+              <line x1="36" y1="85" x2="23" y2="60" stroke="#010005" stroke-width="6" />
+              <line x1="23" y1="60" x2="23" y2="40" stroke="#010005" stroke-width="7" />
+              <line x1="18" y1="40" x2="30" y2="40" stroke="#010005" stroke-width="5" />
+            </g>
+
+            <!-- Kid 4 (Will/Eleven style) -->
+            <g transform="translate(220, 24)">
+              <rect x="18" y="10" width="11" height="11" rx="2" fill="#010005" /> <!-- Bowl cut head -->
+              <rect x="13" y="21" width="21" height="26" rx="2" fill="#010005" /> <!-- Torso -->
+              <rect x="17" y="23" width="13" height="18" rx="1" fill="#010005" /> <!-- Backpack -->
+              <!-- Bike -->
+              <circle cx="10" cy="83" r="13" stroke="#010005" stroke-width="5" fill="none" />
+              <circle cx="34" cy="83" r="13" stroke="#010005" stroke-width="5" fill="none" />
+              <line x1="10" y1="83" x2="22" y2="58" stroke="#010005" stroke-width="6" />
+              <line x1="34" y1="83" x2="22" y2="58" stroke="#010005" stroke-width="6" />
+              <line x1="22" y1="58" x2="22" y2="38" stroke="#010005" stroke-width="7" />
+              <line x1="17" y1="38" x2="27" y2="38" stroke="#010005" stroke-width="5" />
+            </g>
+          </svg>
+
+          <!-- Ground split line -->
+          <div class="scene-ground-split"></div>
+        </div>
+
+        <!-- Upside Down Scene (Bottom 50%) -->
+        <div class="scene-usd">
+          <!-- Canvas for Lightning Strikes -->
+          <canvas id="lightning-canvas"></canvas>
+
+          <!-- Mind Flayer Silhouette SVG -->
+          <svg class="scene-mindflayer" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <!-- Center body shadow -->
+            <path d="M 180,180 Q 200,100 220,180 Q 240,240 200,260 Q 160,240 180,180 Z" fill="#060000" />
+            <path d="M 170,160 Q 200,110 230,160 Q 250,210 200,230 Q 150,210 170,160 Z" fill="#0c0000" />
+            
+            <!-- Head / Eyes area -->
+            <ellipse cx="200" cy="155" rx="18" ry="12" fill="#060000" />
+            <!-- Glowing Red Eyes -->
+            <circle cx="192" cy="155" r="3" fill="#ff1e27" />
+            <circle cx="208" cy="155" r="3" fill="#ff1e27" />
+            
+            <!-- Massive Branching Tentacles -->
+            <!-- Left upper tentacle -->
+            <path d="M 180,150 Q 120,80 80,120 Q 50,150 20,100 Q 50,80 90,100 Q 130,110 185,155 Z" fill="#060000" />
+            <!-- Right upper tentacle -->
+            <path d="M 220,150 Q 280,80 320,120 Q 350,150 380,100 Q 350,80 310,100 Q 270,110 215,155 Z" fill="#060000" />
+            
+            <!-- Left mid tentacle -->
+            <path d="M 175,170 Q 110,160 70,220 Q 40,260 10,230 Q 30,220 70,180 Q 110,140 170,165 Z" fill="#060000" />
+            <!-- Right mid tentacle -->
+            <path d="M 225,170 Q 290,160 330,220 Q 360,260 390,230 Q 370,220 330,180 Q 290,140 230,165 Z" fill="#060000" />
+
+            <!-- Lower anchor legs -->
+            <path d="M 185,210 Q 130,260 100,320 L 115,320 Q 140,270 190,225 Z" fill="#060000" />
+            <path d="M 215,210 Q 270,260 300,320 L 285,320 Q 260,270 210,225 Z" fill="#060000" />
+            
+            <!-- Swirling Spooky Red Core Shader accents simulated by small path particles -->
+            <path d="M 195,145 Q 200,120 205,145 Z" fill="#ff1e27" opacity="0.6" />
+          </svg>
+
+          <!-- Repeating Pine Trees (upside down/dead) at the very top of RIFT -->
+          <div class="scene-trees" style="transform: rotate(180deg); bottom: auto; top: 0;">
+            <svg viewBox="0 0 900 120" preserveAspectRatio="none">
+              <path d="M 0,120 L 0,60 L 20,100 L 30,50 L 50,90 L 60,40 L 80,85 L 90,30 L 110,95 L 120,45 L 140,90 L 150,55 L 170,95 L 180,35 L 200,85 L 210,50 L 230,90 L 240,40 L 260,85 L 270,30 L 290,95 L 300,45 L 320,90 L 330,55 L 350,95 L 360,35 L 380,85 L 390,50 L 410,90 L 420,40 L 440,85 L 450,30 L 470,95 L 480,45 L 500,90 L 510,55 L 530,95 L 540,35 L 560,85 L 570,50 L 590,90 L 605,40 L 625,85 L 635,30 L 655,95 L 665,45 L 685,90 L 695,55 L 715,95 L 725,35 L 745,85 L 755,50 L 775,90 L 785,40 L 805,85 L 815,30 L 835,95 L 845,45 L 865,90 L 875,55 L 895,95 L 900,120 Z" />
+            </svg>
+          </div>
+          
+          <!-- Ground separator line (Upside Down side) -->
+          <div class="scene-ground-split" style="bottom: auto; top: 0;"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SNES Menu Options -->
+    <ul class="snes-menu">
+      <li class="menu-item active" data-action="player1">
+        <span class="menu-arrow">▶</span>
+        <span class="menu-label">1 PLAYER</span>
+      </li>
+      <li class="menu-item" data-action="player2">
+        <span class="menu-arrow">▶</span>
+        <span class="menu-label">2 PLAYERS</span>
+      </li>
+      <li class="menu-item" data-action="options">
+        <span class="menu-arrow">▶</span>
+        <span class="menu-label">OPTIONS</span>
+      </li>
+    </ul>
+
+    <!-- Quick instructions -->
+    <div class="font-pixel text-[6px] sm:text-[8px] text-gray-500 tracking-wider mb-8">
+      USE ARROWS / MOUSE TO SELECT &bull; ENTER / CLICK TO START
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MISSION LOG / ABOUT — CRT MONITOR
+       ============================================================ -->
+  <section id="about">
+    <div class="section-wrapper">
+      <div class="text-center mb-12">
+        <span class="section-badge">Mission Log</span>
+        <h2 class="section-title glitch-text mx-auto" style="max-width:600px;">About Glitch</h2>
+        <p class="section-desc mx-auto">Transmission from the Upside Down Development Lab</p>
+      </div>
+
+      <div class="crt-monitor">
+        <div id="crt-screen">
+          <div class="crt-header">// GLITCH_SYSTEM_v2.0 — BOOT SEQUENCE</div>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>LOADING MISSION BRIEFING...</div>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>STATUS: <span class="crt-highlight">ACTIVE</span></div>
+          <br>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>GLITCH is the <span class="crt-highlight">Game Development Special Interest Group</span> under ACM Amrita.</div>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>We build games from scratch — 2D platformers, 3D adventures, puzzle engines, and multiplayer arenas.</div>
+          <br>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>Our arsenal includes <span class="crt-highlight">Unity</span>, <span class="crt-highlight">Unreal Engine</span>, <span class="crt-highlight">Godot</span>, and custom <span class="crt-highlight">WebGL</span> pipelines.</div>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>We host game jams, shader workshops, pixel art sessions, and narrative design masterclasses.</div>
+          <br>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>CURRENT PARTY SIZE: <span class="crt-highlight">80+ MEMBERS</span></div>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>MISSION: Build games that warp reality.</div>
+          <div class="crt-line"><span class="crt-prompt">&gt; </span>STATUS: <span class="crt-highlight">RECRUITING NEW ADVENTURERS...</span></div>
+          <br>
+          <div class="crt-line" style="opacity: 0.5;"><span class="crt-prompt">&gt; </span>The Upside Down awaits. Will you enter The Gate?_</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       THE ARCADE — PROJECTS
+       ============================================================ -->
+  <section id="arcade">
+    <div class="section-wrapper">
+      <div class="text-center mb-12">
+        <span class="section-badge">The Arcade</span>
+        <h2 class="section-title glitch-text">Our Game Projects</h2>
+        <p class="section-desc mx-auto">Insert coin. Select your adventure. Each cabinet holds a world we built.</p>
+      </div>
+
+      <div class="arcade-grid">
+        <!-- Cabinet 1 -->
+        <div class="arcade-cabinet flashlight-card"
+             data-title="Shadow Realm"
+             data-desc="A roguelike dungeon crawler built in Godot. Procedurally generated levels, permadeath mechanics, and a haunting pixel-art aesthetic. Players descend through 50 floors of an ancient dungeon, battling shadow creatures with spell-crafted weapons."
+             data-tech="Godot,GDScript,Pixel Art,Procedural Gen"
+             data-img="assets/arcade_game2.png">
+          <div class="flashlight-glow"></div>
+          <div class="arcade-screen">
+            <img src="assets/arcade_game2.png" alt="Shadow Realm — Dungeon Crawler">
+          </div>
+          <div class="arcade-info">
+            <h3 class="arcade-title">Shadow Realm</h3>
+            <p class="arcade-desc">Roguelike dungeon crawler with procedurally generated levels and permadeath.</p>
+            <div class="arcade-tags">
+              <span class="arcade-tag">Godot</span>
+              <span class="arcade-tag">Pixel Art</span>
+              <span class="arcade-tag">Roguelike</span>
+            </div>
+            <div class="arcade-play-label">▶ Click to inspect</div>
+          </div>
+        </div>
+
+        <!-- Cabinet 2 -->
+        <div class="arcade-cabinet flashlight-card"
+             data-title="Void Runner"
+             data-desc="A high-speed endless runner platformer built with Unity. Sprint through a collapsing neon city, dodge lasers, wall-jump across skyscrapers, and collect power orbs to slow down time. Features a synthwave soundtrack and online leaderboards."
+             data-tech="Unity,C#,Shader Graph,Online Leaderboards"
+             data-img="assets/arcade_game3.png">
+          <div class="flashlight-glow"></div>
+          <div class="arcade-screen">
+            <img src="assets/arcade_game3.png" alt="Void Runner — Endless Platformer">
+          </div>
+          <div class="arcade-info">
+            <h3 class="arcade-title">Void Runner</h3>
+            <p class="arcade-desc">High-speed endless runner through a collapsing neon city with synthwave vibes.</p>
+            <div class="arcade-tags">
+              <span class="arcade-tag">Unity</span>
+              <span class="arcade-tag">C#</span>
+              <span class="arcade-tag">Platformer</span>
+            </div>
+            <div class="arcade-play-label">▶ Click to inspect</div>
+          </div>
+        </div>
+
+        <!-- Cabinet 3 -->
+        <div class="arcade-cabinet flashlight-card"
+             data-title="Demogorgon Defense"
+             data-desc="A tower defense strategy game where you place traps and turrets to defend Hawkins Lab from waves of Upside Down creatures. Built entirely with custom WebGL shaders and vanilla JavaScript. Features 30 waves, 8 tower types, and a boss Demogorgon finale."
+             data-tech="JavaScript,WebGL,Canvas API,Custom Shaders"
+             data-img="assets/arcade_game1.png">
+          <div class="flashlight-glow"></div>
+          <div class="arcade-screen">
+            <img src="assets/arcade_game1.png" alt="Demogorgon Defense — Tower Defense">
+          </div>
+          <div class="arcade-info">
+            <h3 class="arcade-title">Demogorgon Defense</h3>
+            <p class="arcade-desc">Tower defense game protecting Hawkins Lab from Upside Down creatures.</p>
+            <div class="arcade-tags">
+              <span class="arcade-tag">WebGL</span>
+              <span class="arcade-tag">JavaScript</span>
+              <span class="arcade-tag">Strategy</span>
+            </div>
+            <div class="arcade-play-label">▶ Click to inspect</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Arcade Modal -->
+  <div id="arcade-modal">
+    <div class="modal-content glass-panel">
+      <button id="arcade-modal-close" class="modal-close">[ESC] Close</button>
+      <img id="arcade-modal-img" class="modal-img" src="" alt="">
+      <h3 id="arcade-modal-title" class="pixel-text" style="font-size:0.85rem; color:var(--accent-1); margin-bottom:0.75rem;"></h3>
+      <p id="arcade-modal-desc" style="color:var(--text-secondary); font-size:0.85rem; line-height:1.7; margin-bottom:1rem;"></p>
+      <div id="arcade-modal-tech" class="arcade-tags"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MINI-GAME — GLITCH INVADERS
+       ============================================================ -->
+  <section id="minigame-section">
+    <div class="section-wrapper">
+      <div class="text-center mb-8">
+        <span class="section-badge">Bonus Stage</span>
+        <h2 class="section-title glitch-text">Glitch Invaders</h2>
+        <p class="section-desc mx-auto">Defend the code from invading bugs! A playable arcade mini-game — right here in your browser.</p>
+      </div>
+
+      <div class="game-wrapper">
+        <div class="game-cabinet-frame">
+          <div class="game-hud">
+            <div class="game-hud-item">
+              <span class="game-hud-label">Score:</span>
+              <span id="game-score">0</span>
+            </div>
+            <div class="game-hud-item">
+              <span class="game-hud-label">Lives:</span>
+              <span id="game-lives">♥♥♥</span>
+            </div>
+          </div>
+          <canvas id="game-canvas" width="600" height="400"></canvas>
+          <button id="game-start-btn">Insert Coin to Play</button>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div id="game-over-screen">
+          <div class="game-over-title">Game Over</div>
+          <div class="game-over-score">Final Score: <span id="game-final-score">0</span></div>
+          <button id="game-restart-btn">Continue? (Insert Coin)</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HIGH SCORES — STATS LEADERBOARD
+       ============================================================ -->
+  <section id="highscores">
+    <div class="section-wrapper">
+      <div class="text-center mb-12">
+        <span class="section-badge">High Scores</span>
+        <h2 class="section-title glitch-text">Achievement Unlocked</h2>
+        <p class="section-desc mx-auto">Our stats from the frontlines of game development.</p>
+      </div>
+
+      <div class="leaderboard">
+        <div class="leaderboard-header">
+          <span>Rank</span>
+          <span>Achievement</span>
+          <span>Score</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">01</span>
+          <span class="leaderboard-label">Games Built & Shipped</span>
+          <span class="score-value" data-target="52">0</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">02</span>
+          <span class="leaderboard-label">Active Members</span>
+          <span class="score-value" data-target="80">0</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">03</span>
+          <span class="leaderboard-label">Game Jams Won</span>
+          <span class="score-value" data-target="15">0</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">04</span>
+          <span class="leaderboard-label">Workshops Conducted</span>
+          <span class="score-value" data-target="38">0</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">05</span>
+          <span class="leaderboard-label">Lines of Game Code Written</span>
+          <span class="score-value" data-target="250000" data-suffix="+">0</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       THE PARTY — TEAM (D&D CHARACTER CARDS)
+       ============================================================ -->
+  <section id="team">
+    <div class="section-wrapper">
+      <div class="text-center mb-12">
+        <span class="section-badge">The Party</span>
+        <h2 class="section-title glitch-text">Choose Your Character</h2>
+        <p class="section-desc mx-auto">Meet the adventurers leading the Glitch guild. Each brings unique abilities to the raid.</p>
+      </div>
+
+      <div class="character-grid">
+        <!-- Character 1: Lead Mage (Tech Lead) -->
+        <div class="character-card flashlight-card">
+          <div class="flashlight-glow"></div>
+          <div class="glare-overlay"></div>
+          <img src="assets/char_techlead.png" alt="Arjun — Lead Mage" class="character-portrait">
+          <div class="character-info">
+            <div class="character-class">Lead Mage — Arcane Coder</div>
+            <div class="character-name">Arjun V.</div>
+            <div class="character-title">Tech Lead &bull; Engine Architect</div>
+            <div class="stat-row">
+              <span class="stat-label">Code</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="92"></div></div>
+              <span class="stat-value">18</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Design</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="70"></div></div>
+              <span class="stat-value">14</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Art</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="60"></div></div>
+              <span class="stat-value">12</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Lore</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="85"></div></div>
+              <span class="stat-value">17</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Character 2: Ranger (Art Lead) -->
+        <div class="character-card flashlight-card">
+          <div class="flashlight-glow"></div>
+          <div class="glare-overlay"></div>
+          <img src="assets/char_artlead.png" alt="Meera — Ranger" class="character-portrait">
+          <div class="character-info">
+            <div class="character-class">Ranger — Pixel Artisan</div>
+            <div class="character-name">Meera S.</div>
+            <div class="character-title">Art Lead &bull; Sprite Commander</div>
+            <div class="stat-row">
+              <span class="stat-label">Code</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="55"></div></div>
+              <span class="stat-value">11</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Design</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="90"></div></div>
+              <span class="stat-value">18</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Art</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="95"></div></div>
+              <span class="stat-value">19</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Lore</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="75"></div></div>
+              <span class="stat-value">15</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Character 3: Paladin (President) -->
+        <div class="character-card flashlight-card">
+          <div class="flashlight-glow"></div>
+          <div class="glare-overlay"></div>
+          <img src="assets/char_techlead.png" alt="Karthik — Paladin" class="character-portrait">
+          <div class="character-info">
+            <div class="character-class">Paladin — Guild Master</div>
+            <div class="character-name">Karthik R.</div>
+            <div class="character-title">President &bull; Project Lead</div>
+            <div class="stat-row">
+              <span class="stat-label">Code</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="80"></div></div>
+              <span class="stat-value">16</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Design</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="82"></div></div>
+              <span class="stat-value">16</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Art</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="65"></div></div>
+              <span class="stat-value">13</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Lore</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="90"></div></div>
+              <span class="stat-value">18</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Character 4: Bard (Events Lead) -->
+        <div class="character-card flashlight-card">
+          <div class="flashlight-glow"></div>
+          <div class="glare-overlay"></div>
+          <img src="assets/char_artlead.png" alt="Priya — Bard" class="character-portrait">
+          <div class="character-info">
+            <div class="character-class">Bard — Event Weaver</div>
+            <div class="character-name">Priya K.</div>
+            <div class="character-title">Events Lead &bull; Community Manager</div>
+            <div class="stat-row">
+              <span class="stat-label">Code</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="60"></div></div>
+              <span class="stat-value">12</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Design</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="78"></div></div>
+              <span class="stat-value">15</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Art</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="70"></div></div>
+              <span class="stat-value">14</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Lore</span>
+              <div class="stat-bar"><div class="stat-bar-fill" data-value="95"></div></div>
+              <span class="stat-value">19</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       THE RIFT — JOIN US CTA
+       ============================================================ -->
+  <section id="rift">
+    <canvas id="rift-canvas"></canvas>
+    <div class="rift-content section-wrapper" style="padding-top:3rem; padding-bottom:3rem;">
+      <h2 class="rift-title">Enter The Gate</h2>
+      <p class="rift-desc">
+        Ready to join the party? Applications for the 2026 cohort are now open. 
+        Step through the rift and become part of the Glitch guild.
+      </p>
+      <div>
+        <a href="https://forms.gle/sample" target="_blank" rel="noopener noreferrer" class="rift-btn-primary">
+          ▶ Apply Now
+        </a>
+        <a href="mailto:acm.glitch@amrita.edu" class="rift-btn-secondary">
+          ✉ Contact Us
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="site-footer">
+    <div>
+      &copy; 2026 GLITCH — Game Dev SIG, ACM Amrita. All rights reserved.
+    </div>
+    <div class="footer-links">
+      <a href="#">GitHub</a>
+      <a href="#">Instagram</a>
+      <a href="#">Discord</a>
+      <a href="#">LinkedIn</a>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       RETRO SNES FOOTER HUD DASHBOARD
+       ============================================================ -->
+  <div id="game-hud-footer">
+    <div class="hud-characters-grid">
+      <!-- Player 1: ARJUN -->
+      <div class="hud-char-box">
+        <img src="assets/char_techlead.png" alt="Arjun Avatar" class="hud-char-avatar">
+        <div class="hud-char-details">
+          <div class="hud-char-name">ARJUN</div>
+          <div class="hud-char-hearts" id="hearts-arjun">♥♥♥♥</div>
+          <div class="hud-char-lives">x3</div>
+        </div>
+        <div class="hud-tooltip">
+          <strong>ARJUN (Tech Lead)</strong><br>
+          Class: Coder Mage<br>
+          Skill: Engine Architecture<br>
+          Code: 18 | Lore: 17
+        </div>
+      </div>
+
+      <!-- Player 2: MEERA -->
+      <div class="hud-char-box">
+        <img src="assets/char_artlead.png" alt="Meera Avatar" class="hud-char-avatar">
+        <div class="hud-char-details">
+          <div class="hud-char-name">MEERA</div>
+          <div class="hud-char-hearts" id="hearts-meera">♥♥♥♥</div>
+          <div class="hud-char-lives">x3</div>
+        </div>
+        <div class="hud-tooltip">
+          <strong>MEERA (Art Lead)</strong><br>
+          Class: Pixel Ranger<br>
+          Skill: Sprite Drawing<br>
+          Art: 19 | Design: 18
+        </div>
+      </div>
+
+      <!-- Player 3: KARTHIK -->
+      <div class="hud-char-box">
+        <img src="assets/char_techlead.png" alt="Karthik Avatar" class="hud-char-avatar" style="filter: hue-rotate(90deg);">
+        <div class="hud-char-details">
+          <div class="hud-char-name">KARTHIK</div>
+          <div class="hud-char-hearts" id="hearts-karthik">♥♥♥♥</div>
+          <div class="hud-char-lives">x3</div>
+        </div>
+        <div class="hud-tooltip">
+          <strong>KARTHIK (President)</strong><br>
+          Class: Guild Paladin<br>
+          Skill: Narrative / Lore<br>
+          Lore: 18 | Code: 16
+        </div>
+      </div>
+
+      <!-- Player 4: PRIYA -->
+      <div class="hud-char-box">
+        <img src="assets/char_artlead.png" alt="Priya Avatar" class="hud-char-avatar" style="filter: hue-rotate(240deg);">
+        <div class="hud-char-details">
+          <div class="hud-char-name">PRIYA</div>
+          <div class="hud-char-hearts" id="hearts-priya">♥♥♥♥</div>
+          <div class="hud-char-lives">x3</div>
+        </div>
+        <div class="hud-tooltip">
+          <strong>PRIYA (Events Lead)</strong><br>
+          Class: Sound Bard<br>
+          Skill: Community Harmony<br>
+          Lore: 19 | Design: 15
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD bottom details (Score, Item counts) -->
+    <div class="hud-items-row">
+      <div class="hud-item-waffles">
+        <div class="waffle-icon"></div>
+        <span>WAFFLES: x<span id="hud-waffle-count">08</span></span>
+      </div>
+      <div class="hud-item-score">
+        <span>SCORE: <span id="hud-score-val">011611</span></span>
+      </div>
+      <div class="hud-item-level hide-mobile">
+        <span>LEVEL: <span id="hud-current-level">1</span></span>
+      </div>
+      <div class="hud-item-dimension hide-mobile">
+        <span>GATE: <span id="hud-gate-status">CLOSED</span></span>
+      </div>
+      <!-- Walkie talkie acts as email contact shortcut -->
+      <a href="mailto:acm.glitch@amrita.edu" class="hud-item-walkie">
+        <span class="walkie-icon">📻</span>
+        <span>CALL PARTY</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main JavaScript -->
+  <script src="script.js"></script>
+
+</body>
+</html>

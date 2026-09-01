@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stranger Flap — Hawkins Escape</title>
+  <meta name="description" content="A Stranger Things inspired retro Flappy Bird arcade game. Choose your pixelated character and escape the Upside Down!">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fullscreen Ambient Particle/Ash Effect -->
+  <div id="ambient-container">
+    <canvas id="ambient-canvas"></canvas>
+  </div>
+
+  <div class="main-wrapper">
+    <!-- Header Logo -->
+    <header class="game-header">
+      <div class="stranger-logo">
+        <span class="logo-large">S</span>
+        <span class="logo-mid-wrapper">
+          <span class="logo-line-top"></span>
+          <span class="logo-mid">TRANGER</span>
+        </span>
+        <span class="logo-large">F</span>
+        <span class="logo-mid-wrapper">
+          <span class="logo-line-top"></span>
+          <span class="logo-mid">LAP</span>
+        </span>
+      </div>
+      <p class="subtitle text-glow">HAWKINS ARCADE &bull; EST. 1983</p>
+    </header>
+
+    <!-- Arcade Cabinet Frame -->
+    <main class="arcade-cabinet">
+      <!-- Top Neon Header -->
+      <div class="cabinet-marquee">
+        <span class="marquee-text font-pixel">INSERT COIN TO PLAY</span>
+      </div>
+
+      <!-- Main Game Viewport Screen Container -->
+      <div class="viewport-container">
+        
+        <!-- Screen Scanlines & Glare -->
+        <div class="screen-glass"></div>
+        <div class="scanlines"></div>
+
+        <!-- 1. CHARACTER SELECT OVERLAY -->
+        <div id="char-select-screen" class="screen-overlay font-pixel">
+          <h2 class="select-title text-glow">SELECT YOUR HERO</h2>
+          
+          <div class="char-grid">
+            <!-- Eleven -->
+            <button class="char-card active" data-char="eleven">
+              <div class="char-preview-box">
+                <canvas class="char-preview-canvas" width="48" height="48"></canvas>
+              </div>
+              <div class="char-name">ELEVEN</div>
+            </button>
+
+            <!-- Dustin -->
+            <button class="char-card" data-char="dustin">
+              <div class="char-preview-box">
+                <canvas class="char-preview-canvas" width="48" height="48"></canvas>
+              </div>
+              <div class="char-name">DUSTIN</div>
+            </button>
+
+            <!-- Mike -->
+            <button class="char-card" data-char="mike">
+              <div class="char-preview-box">
+                <canvas class="char-preview-canvas" width="48" height="48"></canvas>
+              </div>
+              <div class="char-name">MIKE</div>
+            </button>
+
+            <!-- Lucas -->
+            <button class="char-card" data-char="lucas">
+              <div class="char-preview-box">
+                <canvas class="char-preview-canvas" width="48" height="48"></canvas>
+              </div>
+              <div class="char-name">LUCAS</div>
+            </button>
+
+            <!-- Steve -->
+            <button class="char-card" data-char="steve">
+              <div class="char-preview-box">
+                <canvas class="char-preview-canvas" width="48" height="48"></canvas>
+              </div>
+              <div class="char-name">STEVE</div>
+            </button>
+
+            <!-- Hopper -->
+            <button class="char-card" data-char="hopper">
+              <div class="char-preview-box">
+                <canvas class="char-preview-canvas" width="48" height="48"></canvas>
+              </div>
+              <div class="char-name">HOPPER</div>
+            </button>
+          </div>
+
+          <!-- Character Detail HUD -->
+          <div class="char-detail-panel font-terminal">
+            <h3 id="detail-name" class="font-pixel text-glow">ELEVEN</h3>
+            <p id="detail-desc">Subject 011. Telekinetic Eggo lover. Escaped Hawkins National Lab.</p>
+            <div class="stats-row">
+              <div class="stat-item">
+                <span class="stat-label">FLAP POWER:</span>
+                <span id="detail-stat-flap" class="stat-value text-red">★★★★★</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">WEIGHT / FALL:</span>
+                <span id="detail-stat-weight" class="stat-value text-blue">★★☆☆☆</span>
+              </div>
+            </div>
+            <div class="special-power-row">
+              <span class="special-label">SPECIAL:</span>
+              <span id="detail-special" class="special-value">TELEKINESIS SHIELD</span>
+            </div>
+          </div>
+
+          <!-- Start Button -->
+          <button id="btn-start-game" class="btn-arcade font-pixel">▶ PRESS PLAY</button>
+        </div>
+
+        <!-- 2. GAME PLAY CANVAS -->
+        <canvas id="game-canvas" width="600" height="400"></canvas>
+
+        <!-- 3. GAME OVER OVERLAY -->
+        <div id="game-over-screen" class="screen-overlay font-pixel hidden">
+          <h2 class="game-over-title text-glow glitch-text">GAME OVER</h2>
+          
+          <div class="final-stats-box font-terminal">
+            <div class="stat-line">
+              <span>SCORE:</span>
+              <span id="final-score" class="stat-val">00</span>
+            </div>
+            <div class="stat-line">
+              <span>EGGO WAFFLES:</span>
+              <span id="final-waffles" class="stat-val">00</span>
+            </div>
+            <div class="stat-line">
+              <span>BEST SCORE:</span>
+              <span id="best-score" class="stat-val">00</span>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-retry" class="btn-arcade">▶ RETRY</button>
+            <button id="btn-change-char" class="btn-arcade btn-secondary">◀ CHANGE HERO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cabinet Controllers HUD Dashboard -->
+      <div class="cabinet-controls font-pixel">
+        <div class="hud-left">
+          <div class="hud-indicator font-terminal">
+            SCORE: <span id="hud-score" class="hud-num">0</span>
+          </div>
+          <div class="hud-indicator font-terminal">
+            EGGOs: <span id="hud-waffles" class="hud-num">0</span>
+          </div>
+        </div>
+        <div class="hud-center">
+          <div id="dimension-indicator" class="dimension-status rsu text-cyan font-pixel">RIGHT SIDE UP</div>
+        </div>
+        <div class="hud-right">
+          <button id="btn-mute" class="control-btn" title="Toggle Sound">🔊 SOUND</button>
+          <button id="btn-info" class="control-btn" title="How To Play">❓ HOW</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Instructional Overlay Modal -->
+    <div id="info-modal" class="modal hidden font-pixel">
+      <div class="modal-content glass-panel">
+        <button id="btn-close-modal" class="modal-close">[ESC] CLOSE</button>
+        <h3 class="text-glow text-red">HOW TO ESCAPE HAWKINS</h3>
+        <ul class="info-list font-terminal">
+          <li>&bull; Select your Stranger Things hero from the character selection screen.</li>
+          <li>&bull; Use <span class="highlight">SPACEBAR</span>, <span class="highlight">UP ARROW</span>, or <span class="highlight">MOUSE CLICK / TAP</span> to flap upwards.</li>
+          <li>&bull; Fly through the gaps in the Hawkins Lab barriers / Upside Down tentacles.</li>
+          <li>&bull; Collect <span class="highlight-yellow">EGGO WAFFLES</span> for 5 extra points!</li>
+          <li>&bull; Watch out for <span class="highlight-red">RIFT PORTALS</span>. Flying through them warps you between dimensions, swapping physics and hazards!</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Quick Footer -->
+    <footer class="game-footer font-terminal">
+      <p>&copy; 1983 HAWKINS TOY & GAME CO. &bull; ALL RIGHTS RESERVED</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
