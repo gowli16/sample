@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+scikit-learn
+numpy
+jinja2
+pyshark
+nest_asyncio
