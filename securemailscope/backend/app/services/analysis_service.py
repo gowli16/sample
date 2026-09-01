@@ -59,8 +59,8 @@ class AnalysisService:
         try:
             result = self.results[analysis_id]
 
-            # ─── Step 1: Parse PCAP ───────────────────────────────────
-            parser = get_parser("tshark")
+            # ─── Step 1: Parse PCAP (Zeek 5-star Architecture for Kali Linux) ────
+            parser = get_parser("zeek")
             raw_packets = parser.parse(filepath)
 
             # ─── Step 2: Detect protocols ─────────────────────────────
