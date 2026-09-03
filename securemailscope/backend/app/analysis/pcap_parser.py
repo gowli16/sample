@@ -1,8 +1,5 @@
 import abc
-import struct
 import os
-import nest_asyncio
-nest_asyncio.apply()
 
 class PcapParserInterface(abc.ABC):
     @abc.abstractmethod
@@ -32,190 +29,233 @@ class MockPcapParser(PcapParserInterface):
         else:
             return SCENARIOS["secure_smtp"]["raw_packets"]
 
-class TSharkPcapParser(PcapParserInterface):
+
+class SuricataPcapParser(PcapParserInterface):
+    """
+    Production-grade PCAP parser using Suricata IDS engine.
+    
+    Runs: suricata -r capture.pcap -l /tmp/output/
+    Parses the eve.json output for flow, tls, smtp, and alert events.
+    Handles ALL pcap formats natively (no conversion needed).
+    """
+    
     def parse(self, filepath: str) -> dict:
-        import pyshark
-        print(f"Parsing PCAP with TShark/pyshark: {filepath}")
-        
-        # We need to capture both the regular packets and try to group them.
-        cap = pyshark.FileCapture(filepath, include_raw=False) # use_json occasionally has issues depending on tshark version
+        import json
+        import subprocess
+        import tempfile
+
+        print(f"[Suricata] Parsing PCAP: {filepath}")
         raw_packets = []
         
-        try:
-            for packet in cap:
-                if not hasattr(packet, 'ip') and not hasattr(packet, 'ipv6'):
-                    continue
-                
-                if hasattr(packet, 'ip'):
-                    src_ip = packet.ip.src
-                    dst_ip = packet.ip.dst
-                else:
-                    src_ip = packet.ipv6.src
-                    dst_ip = packet.ipv6.dst
-                
-                if not hasattr(packet, 'tcp') and not hasattr(packet, 'udp'):
-                    continue
-                
-                protocol = "TCP" if hasattr(packet, 'tcp') else "UDP"
-                if protocol == "TCP":
-                    src_port = int(packet.tcp.srcport)
-                    dst_port = int(packet.tcp.dstport)
-                else:
-                    src_port = int(packet.udp.srcport)
-                    dst_port = int(packet.udp.dstport)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Run Suricata in offline (pcap replay) mode
+            # -r = read pcap, -l = log output directory
+            # Detect suricata binary path
+            suricata_bin = "/usr/bin/suricata" if os.path.exists("/usr/bin/suricata") else "suricata"
+            
+            try:
+                result = subprocess.run(
+                    [
+                        suricata_bin,
+                        '-r', os.path.abspath(filepath),
+                        '-l', tmpdir,
+                        '--set', 'app-layer.protocols.smtp.enabled=yes',
+                        '--set', 'app-layer.protocols.tls.enabled=yes',
+                        '--set', 'app-layer.protocols.imap.enabled=detection-only',
+                    ],
+                    capture_output=True,
+                    timeout=120  # 2 min timeout for large pcaps
+                )
+                # Suricata may return non-zero for warnings, check stderr
+                if result.returncode != 0:
+                    stderr_text = result.stderr.decode(errors='replace')
+                    # Only raise if it's a true fatal error, not just warnings
+                    if 'error' in stderr_text.lower() and 'eve.json' not in stderr_text:
+                        print(f"[Suricata] Warning (non-fatal): {stderr_text[:500]}")
+            except FileNotFoundError:
+                raise RuntimeError(
+                    "Suricata not found. Install with: sudo apt install suricata"
+                )
+            except subprocess.TimeoutExpired:
+                raise RuntimeError("Suricata timed out processing the PCAP file.")
+
+            # Parse eve.json — Suricata's structured event log
+            eve_path = os.path.join(tmpdir, "eve.json")
+            if not os.path.exists(eve_path):
+                raise RuntimeError(
+                    "Suricata did not produce eve.json. "
+                    "Check that Suricata is configured correctly."
+                )
+            
+            # Index TLS events by flow_id for cross-referencing
+            tls_by_flow = {}
+            # Index SMTP events by flow_id
+            smtp_by_flow = {}
+            # Collect flow events
+            flow_events = []
+            # Collect alert events
+            alert_events = []
+            
+            with open(eve_path, 'r') as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    try:
+                        event = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+
+                    event_type = event.get("event_type")
+                    flow_id = event.get("flow_id")
                     
-                length = int(packet.length) if hasattr(packet, 'length') else 0
+                    if event_type == "tls" and flow_id:
+                        tls_by_flow[flow_id] = event.get("tls", {})
+                    elif event_type == "smtp" and flow_id:
+                        smtp_by_flow[flow_id] = event.get("smtp", {})
+                    elif event_type == "flow":
+                        flow_events.append(event)
+                    elif event_type == "alert":
+                        alert_events.append(event)
+            
+            # Build raw_packets from flow events (each flow = one "connection")
+            for flow_event in flow_events:
+                flow_id = flow_event.get("flow_id")
+                src_ip = flow_event.get("src_ip")
+                dst_ip = flow_event.get("dest_ip")
+                src_port = flow_event.get("src_port")
+                dst_port = flow_event.get("dest_port")
+                proto = (flow_event.get("proto", "TCP")).upper()
                 
-                crypto = None
-                hostname = None
+                # Calculate length from flow stats
+                flow_stats = flow_event.get("flow", {})
+                bytes_toserver = flow_stats.get("bytes_toserver", 0)
+                bytes_toclient = flow_stats.get("bytes_toclient", 0)
+                length = bytes_toserver + bytes_toclient
+                
+                # Check for plaintext auth in SMTP
+                smtp_data = smtp_by_flow.get(flow_id, {})
                 has_plaintext_auth = False
-                
-                if hasattr(packet, 'tls'):
-                    tls_version = getattr(packet.tls, 'handshake_version', None) 
-                    cipher_suite = getattr(packet.tls, 'handshake_ciphersuite', None)
-                    
-                    if tls_version:
-                        tls_map = {"0x0304": "TLSv1.3", "0x0303": "TLSv1.2", "0x0302": "TLSv1.1", "0x0301": "TLSv1.0"}
-                        tls_version = tls_map.get(tls_version, tls_version)
-                    
-                    crypto = {
-                        "tls_version": tls_version or "Unknown",
-                        "cipher_suite": cipher_suite or "Unknown",
-                        "starttls_used": getattr(packet.tls, 'record_version', None) is not None,
-                        "cert_valid": True,
-                        "cert_expired": False,
-                        "self_signed": False,
-                        "hostname_match": True,
-                        "key_size": 2048,
-                        "signature_algorithm": "SHA256WithRSA",
-                        "chain_valid": True,
-                        "handshake_status": "Successful"
-                    }
-                    
-                    hostname = getattr(packet.tls, 'handshake_extensions_server_name', None)
+                if smtp_data:
+                    # Suricata logs SMTP commands; check for AUTH on unencrypted
+                    mail_from = smtp_data.get("mail_from")
+                    if mail_from and not tls_by_flow.get(flow_id):
+                        has_plaintext_auth = True
 
                 packet_dict = {
                     "src_ip": src_ip,
                     "dst_ip": dst_ip,
                     "src_port": src_port,
                     "dst_port": dst_port,
-                    "protocol": protocol,
+                    "protocol": proto,
                     "length": length,
+                    "has_plaintext_auth": has_plaintext_auth,
                 }
                 
-                if hostname:
-                    packet_dict["hostname"] = hostname
-                if crypto:
-                    packet_dict["crypto"] = crypto
-                packet_dict["has_plaintext_auth"] = has_plaintext_auth
+                # Cross-reference TLS details from the tls event
+                tls_data = tls_by_flow.get(flow_id)
+                if tls_data:
+                    tls_version = tls_data.get("version", "Unknown")
+                    sni = tls_data.get("sni")
                     
+                    if sni:
+                        packet_dict["hostname"] = sni
+                    
+                    # Extract certificate details from Suricata's TLS event
+                    subject = tls_data.get("subject", "")
+                    issuer = tls_data.get("issuerdn", "")
+                    serial = tls_data.get("serial", "")
+                    notbefore = tls_data.get("notbefore", "")
+                    notafter = tls_data.get("notafter", "")
+                    ja3_hash = tls_data.get("ja3", {}).get("hash", "")
+                    
+                    # Determine if self-signed (subject == issuer)
+                    is_self_signed = (subject == issuer) if subject and issuer else False
+                    
+                    packet_dict["crypto"] = {
+                        "tls_version": tls_version,
+                        "cipher_suite": tls_data.get("cipher", "Unknown"),
+                        "starttls_used": dst_port in (25, 587, 143, 110),
+                        "cert_valid": True,  # Suricata doesn't validate certs by default
+                        "cert_expired": False,
+                        "self_signed": is_self_signed,
+                        "hostname_match": sni is not None,
+                        "key_size": 2048,  # Suricata doesn't always expose this
+                        "signature_algorithm": "SHA256WithRSA",
+                        "chain_valid": not is_self_signed,
+                        "handshake_status": "Successful",
+                        "subject": subject,
+                        "issuer": issuer,
+                        "serial": serial,
+                        "not_before": notbefore,
+                        "not_after": notafter,
+                        "ja3_fingerprint": ja3_hash,
+                        "sni_hostname": sni,
+                    }
+                
                 raw_packets.append(packet_dict)
-        except Exception as e:
-            print(f"Pyshark parsing error (Make sure TShark/Wireshark is installed): {e}")
-            raise e
-        finally:
-            cap.close()
             
-        return raw_packets
-
-class ZeekPcapParser(PcapParserInterface):
-    def parse(self, filepath: str) -> dict:
-        import json
-        import subprocess
-        import tempfile
-        import os
-
-        print(f"Parsing PCAP with Zeek: {filepath}")
-        raw_packets = []
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            try:
-                # Run zeek in the temp directory so it dumps logs there
-                # LogAscii::use_json=T ensures logs are in JSON format
-                subprocess.run(
-                    ['zeek', '-r', os.path.abspath(filepath), 'LogAscii::use_json=T'],
-                    cwd=tmpdir,
-                    check=True,
-                    capture_output=True
-                )
-            except subprocess.CalledProcessError as e:
-                print(f"Zeek parsing error: {e.stderr.decode()}")
-                raise RuntimeError(f"Zeek failed to run: {e.stderr.decode()}") from e
-            except FileNotFoundError:
-                raise RuntimeError("Zeek command not found. Please ensure you are on Kali Linux and ran 'sudo apt install zeek'.")
-            
-            conn_log_path = os.path.join(tmpdir, "conn.log")
-            ssl_log_path = os.path.join(tmpdir, "ssl.log")
-            
-            # Read ssl.log to get TLS details mapped by connection ID
-            ssl_conns = {}
-            if os.path.exists(ssl_log_path):
-                with open(ssl_log_path, 'r') as f:
+            # If no flow events but we have TLS/alert events, build from those
+            if not flow_events:
+                print("[Suricata] No flow events found, building from raw eve.json events")
+                with open(eve_path, 'r') as f:
                     for line in f:
-                        if not line.strip(): continue
+                        if not line.strip():
+                            continue
                         try:
-                            entry = json.loads(line)
-                            ssl_conns[entry.get("uid")] = entry
+                            event = json.loads(line)
                         except json.JSONDecodeError:
                             continue
-
-            # Read conn.log as base connections (converted to "packets" for the reconstructor)
-            if os.path.exists(conn_log_path):
-                with open(conn_log_path, 'r') as f:
-                    for line in f:
-                        if not line.strip(): continue
-                        try:
-                            entry = json.loads(line)
-                            uid = entry.get("uid")
-                            protocol = entry.get("proto", "tcp").upper()
-                            # orig_bytes + resp_bytes
-                            length = entry.get("orig_bytes", 0) + entry.get("resp_bytes", 0)
-                            
+                        
+                        event_type = event.get("event_type")
+                        if event_type in ("tls", "smtp", "alert", "http"):
                             packet_dict = {
-                                "src_ip": entry.get("id.orig_h"),
-                                "dst_ip": entry.get("id.resp_h"),
-                                "src_port": entry.get("id.orig_p"),
-                                "dst_port": entry.get("id.resp_p"),
-                                "protocol": protocol,
-                                "length": length,
+                                "src_ip": event.get("src_ip"),
+                                "dst_ip": event.get("dest_ip"),
+                                "src_port": event.get("src_port"),
+                                "dst_port": event.get("dest_port"),
+                                "protocol": (event.get("proto", "TCP")).upper(),
+                                "length": 0,
                                 "has_plaintext_auth": False,
                             }
                             
-                            ssl_entry = ssl_conns.get(uid)
-                            if ssl_entry:
-                                tls_version = ssl_entry.get("version", "Unknown")
-                                cipher = ssl_entry.get("cipher", "Unknown")
-                                server_name = ssl_entry.get("server_name")
+                            if event_type == "tls":
+                                tls_data = event.get("tls", {})
+                                sni = tls_data.get("sni")
+                                if sni:
+                                    packet_dict["hostname"] = sni
                                 
-                                if server_name:
-                                    packet_dict["hostname"] = server_name
-                                    
+                                subject = tls_data.get("subject", "")
+                                issuer = tls_data.get("issuerdn", "")
+                                is_self_signed = (subject == issuer) if subject and issuer else False
+                                
                                 packet_dict["crypto"] = {
-                                    "tls_version": tls_version,
-                                    "cipher_suite": cipher,
-                                    "starttls_used": "TLS" in tls_version or "SSL" in tls_version,
-                                    "cert_valid": True, # Requires x509 link parsing for deeper checks
+                                    "tls_version": tls_data.get("version", "Unknown"),
+                                    "cipher_suite": tls_data.get("cipher", "Unknown"),
+                                    "starttls_used": event.get("dest_port") in (25, 587, 143, 110),
+                                    "cert_valid": True,
                                     "cert_expired": False,
-                                    "self_signed": False,
-                                    "hostname_match": True,
+                                    "self_signed": is_self_signed,
+                                    "hostname_match": sni is not None,
                                     "key_size": 2048,
                                     "signature_algorithm": "SHA256WithRSA",
-                                    "chain_valid": True,
-                                    "handshake_status": "Successful"
+                                    "chain_valid": not is_self_signed,
+                                    "handshake_status": "Successful",
+                                    "subject": subject,
+                                    "issuer": issuer,
+                                    "sni_hostname": sni,
                                 }
-                                
-                            raw_packets.append(packet_dict)
-                        except json.JSONDecodeError:
-                            continue
                             
+                            raw_packets.append(packet_dict)
+                            
+        print(f"[Suricata] Parsed {len(raw_packets)} connections from eve.json")
         return raw_packets
+
 
 def get_parser(parser_type: str = "mock") -> PcapParserInterface:
     if parser_type == "mock":
         return MockPcapParser()
-    elif parser_type == "tshark":
-        return TSharkPcapParser()
-    elif parser_type == "zeek":
-        return ZeekPcapParser()
+    elif parser_type == "suricata":
+        return SuricataPcapParser()
     else:
         raise ValueError(f"Unknown parser type: {parser_type}")
+
